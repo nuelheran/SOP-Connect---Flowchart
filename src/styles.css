@@ -360,3 +360,26 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
   .panel-tabs .seg button { padding: 6px 6px; font-size: 12.5px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .auth-preview { transform: none; } }
+
+/* ---------- undo/redo & reset ---------- */
+.toolgroup { display: inline-flex; gap: 2px; padding: 2px; border-radius: 11px; background: var(--field); border: 1px solid var(--line); }
+.toolgroup .icon-btn { width: 32px; height: 30px; }
+.choice { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--field); cursor: pointer; }
+.choice:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.choice.danger:hover:not(:disabled) { border-color: var(--red); background: var(--red-soft); }
+.choice:disabled { opacity: .5; cursor: not-allowed; }
+.choice svg { margin-top: 2px; }
+.choice b { display: block; }
+.choice small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+/* ---------- kanvas: zoom & geser dengan mouse ---------- */
+.canvas-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
+.canvas-wrap .canvas { flex: 1; cursor: grab; overscroll-behavior: contain; }
+.canvas-wrap .canvas.panning { cursor: grabbing; user-select: none; }
+.canvas-wrap .canvas.panning .fc-node { cursor: grabbing; }
+.canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.canvas-hint { position: absolute; left: 14px; bottom: 12px; display: flex; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
+.canvas-hint kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 5px; border-radius: 5px; border: 1px solid var(--line-strong); background: var(--glass-strong); color: var(--ink); }
+.zoom .pct { border: 0; background: transparent; cursor: pointer; font-size: 12px; min-width: 52px; height: 30px; font-family: var(--font-mono); }
+.zoom .pct:hover { background: var(--glass-strong); }
+@media (hover: none) { .canvas-hint { display: none; } }

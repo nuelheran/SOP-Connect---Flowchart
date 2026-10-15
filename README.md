@@ -12,6 +12,8 @@ Aplikasi web untuk process owner: **input aktivitas → flowchart SOP tersusun o
 | Kepemilikan & akses | Pemilik, Editor, Pembaca; visibilitas "semua pengguna" atau "hanya yang diberi akses"; alih kepemilikan. **Dijaga di server** (Row Level Security). |
 | Versi & riwayat | Simpan versi (snapshot), lihat & pulihkan versi lama, log aktivitas otomatis. |
 | Edit bersamaan | Deteksi bentrok bila dua orang mengubah flowchart yang sama. |
+| Undo / Redo / Reset | Urungkan & ulangi perubahan (tombol atau Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z; ketikan beruntun digabung jadi satu langkah). Reset: kembali ke kondisi saat dibuka, atau kosongkan semua langkah; keduanya bisa diurungkan. |
+| Kanvas interaktif | Ctrl/⌘ + scroll (atau cubit touchpad) untuk zoom di titik kursor, scroll untuk menggulir (otomatis ke samping pada swimlane horizontal), seret untuk menggeser, tombol +/−/0 saat kanvas aktif. |
 | Admin | Kelola peran pengguna, batasi pendaftaran ke domain email kantor. |
 
 **Tampilan:** antarmuka kaca (glassmorphism) dengan mode terang/gelap otomatis, panduan singkat untuk pengguna baru, dan pemilih simbol berbentuk ikon.

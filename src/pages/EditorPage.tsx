@@ -7,6 +7,8 @@ import FlowPreview from '../components/FlowPreview';
 import HistoryPanel from '../components/HistoryPanel';
 import StepList from '../components/StepList';
 import { Icon, Modal, errMsg, useToast } from '../components/ui';
+import { UndoHistory, mergeKey } from '../lib/history';
+import { blankSteps } from '../lib/steps';
 import { api, ConflictError } from '../data';
 import { ROLE_LABEL, canEditRole, canManageRole, displayName, roleOf } from '../lib/format';
 import type { FlowContent, FlowStatus, Flowchart, Step } from '../lib/types';
@@ -31,6 +33,11 @@ export default function EditorPage() {
   const [compose, setCompose] = useState(false);
   const [versionDlg, setVersionDlg] = useState(false);
   const [histKey, setHistKey] = useState(0);
+  const [resetDlg, setResetDlg] = useState(false);
+  const [, setUndoTick] = useState(0);
+  const undo = useRef(new UndoHistory<FlowContent>());
+  /** Isi flowchart saat editor dibuka / terakhir dimuat dari server (titik Reset). */
+  const baseline = useRef<FlowContent | null>(null);
 
   const flowRef = useRef<Flowchart | null>(null);
   const saveStateRef = useRef<SaveState>('saved');
@@ -47,6 +54,9 @@ export default function EditorPage() {
     try {
       const f = await api.getFlowchart(id);
       if (!f) { setState('missing'); return; }
+      // riwayat undo hanya dikosongkan bila isinya benar-benar berubah (mis. dipulihkan / diubah orang lain)
+      const prev = flowRef.current && flowRef.current.id === f.id ? JSON.stringify(contentOf(flowRef.current)) : null;
+      if (prev !== JSON.stringify(contentOf(f))) { undo.current.clear(); baseline.current = contentOf(f); setUndoTick((t) => t + 1); }
       flowRef.current = f; setFlow(f); dirty.current = false; setSS('saved'); setState('ready');
     } catch (e) { setLoadErr(errMsg(e)); setState('error'); }
   }, [id, setSS]);
@@ -80,8 +90,10 @@ export default function EditorPage() {
   }, [me, toast, setSS]);
 
 
-  const patch = useCallback((p: Partial<FlowContent>) => {
+  /** Terapkan perubahan isi. `record` = catat ke riwayat Undo. */
+  const patch = useCallback((p: Partial<FlowContent>, record = true) => {
     if (!flowRef.current) return;
+    if (record) { undo.current.record(contentOf(flowRef.current), mergeKey(contentOf(flowRef.current), p)); setUndoTick((t) => t + 1); }
     flowRef.current = { ...flowRef.current, ...p };
     setFlow(flowRef.current);
     dirty.current = true;
@@ -97,6 +109,30 @@ export default function EditorPage() {
     window.addEventListener('beforeunload', warn);
     return () => { window.removeEventListener('beforeunload', warn); if (dirty.current && saveStateRef.current !== 'conflict') save(); };
   }, [save]);
+
+  const doUndo = useCallback(() => {
+    if (!flowRef.current) return;
+    const prev = undo.current.undo(contentOf(flowRef.current));
+    if (prev) { patch(prev, false); setUndoTick((t) => t + 1); }
+  }, [patch]);
+  const doRedo = useCallback(() => {
+    if (!flowRef.current) return;
+    const next = undo.current.redo(contentOf(flowRef.current));
+    if (next) { patch(next, false); setUndoTick((t) => t + 1); }
+  }, [patch]);
+
+  // Ctrl/⌘+Z = Undo, Ctrl/⌘+Shift+Z atau Ctrl+Y = Redo
+  useEffect(() => {
+    if (!editable) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || document.querySelector('.overlay')) return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); }
+      else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); doRedo(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [editable, doUndo, doRedo]);
 
   const reload = useCallback(async () => { await save(); await load(); setHistKey((k) => k + 1); }, [save, load]);
 
@@ -146,6 +182,13 @@ export default function EditorPage() {
           <span className="mono muted" style={{ fontSize: 12 }}>{flow.version ? 'v' + flow.version : 'belum berversi'}</span>
           {editable && <span className={'save-pill ' + (saveState === 'error' || saveState === 'conflict' ? 'err' : saveState)} role="status"><i />{saveLabel[saveState]}</span>}
           {saveState === 'error' && <button className="btn sm" onClick={() => save()}>Coba simpan lagi</button>}
+          {editable && (
+            <div className="toolgroup" role="group" aria-label="Riwayat perubahan">
+              <button className="icon-btn" onClick={doUndo} disabled={!undo.current.canUndo} title="Urungkan (Ctrl+Z)" aria-label="Urungkan"><Icon name="undo" /></button>
+              <button className="icon-btn" onClick={doRedo} disabled={!undo.current.canRedo} title="Ulangi (Ctrl+Y atau Ctrl+Shift+Z)" aria-label="Ulangi"><Icon name="redo" /></button>
+              <button className="icon-btn" onClick={() => setResetDlg(true)} title="Reset isi flowchart" aria-label="Reset"><Icon name="reset" /></button>
+            </div>
+          )}
           {editable && <button className="btn" onClick={() => setVersionDlg(true)} title="Simpan salinan tetap, mis. saat diajukan untuk review"><Icon name="clock" />Simpan versi</button>}
         </div>
         {saveState === 'conflict' && (
@@ -182,6 +225,12 @@ export default function EditorPage() {
       </div>
 
       {compose && <ComposeDialog hasSteps={flow.steps.some((s) => s.type !== 'start' && s.type !== 'end' && s.text.trim())} onApply={applyCompose} onClose={() => setCompose(false)} />}
+      {resetDlg && baseline.current && (
+        <ResetDialog onClose={() => setResetDlg(false)}
+          unchanged={JSON.stringify(baseline.current) === JSON.stringify(contentOf(flow))}
+          onBaseline={() => { patch(baseline.current!); setResetDlg(false); toast('Isi dikembalikan ke kondisi saat dibuka. Tekan Urungkan untuk membatalkan.'); }}
+          onBlank={() => { patch({ steps: blankSteps() }); setResetDlg(false); toast('Langkah dikosongkan. Tekan Urungkan untuk membatalkan.'); }} />
+      )}
       {versionDlg && <VersionDialog next={flow.version + 1} onClose={() => setVersionDlg(false)} onSave={async (note) => {
         await save();
         if (saveStateRef.current === 'conflict' || saveStateRef.current === 'error') throw new Error('Selesaikan masalah penyimpanan terlebih dahulu.');
@@ -209,6 +258,23 @@ function VersionDialog({ next, onSave, onClose }: { next: number; onSave: (note:
           try { await onSave(note.trim()); onClose(); } catch (e) { setErr(errMsg(e)); } finally { setBusy(false); }
         }}>{busy ? 'Menyimpan…' : 'Simpan versi'}</button>
       </div>
+    </Modal>
+  );
+}
+
+function ResetDialog({ unchanged, onBaseline, onBlank, onClose }: { unchanged: boolean; onBaseline: () => void; onBlank: () => void; onClose: () => void }) {
+  return (
+    <Modal title="Reset flowchart" onClose={onClose}>
+      <p className="note" style={{ margin: 0 }}>Pilih cara reset. Keduanya bisa dibatalkan dengan tombol Urungkan (Ctrl+Z) selama halaman ini masih terbuka.</p>
+      <button className="choice" onClick={onBaseline} disabled={unchanged}>
+        <Icon name="restore" />
+        <span><b>Kembalikan ke kondisi saat dibuka</b><small>{unchanged ? 'Belum ada perubahan sejak flowchart dibuka.' : 'Membuang semua perubahan yang Anda buat sejak membuka halaman ini.'}</small></span>
+      </button>
+      <button className="choice danger" onClick={onBlank}>
+        <Icon name="trash" />
+        <span><b>Kosongkan semua langkah</b><small>Mulai dari awal: hanya tersisa Mulai, satu langkah kosong, dan Selesai. Judul dan info dokumen tetap.</small></span>
+      </button>
+      <div className="row"><button className="btn" onClick={onClose}>Batal</button></div>
     </Modal>
   );
 }
