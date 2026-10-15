@@ -18,8 +18,8 @@ export function TopBar() {
   }, []);
 
   return (
-    <header className="topbar">
-      <div className="topbar-in wrap">
+    <header className="topbar topbar-shell">
+      <div className="topbar-in glass">
         <Link to="/" className="brand" aria-label="FLOWCRAFT, ke repositori">
           <BrandMark /><span className="brand-name">FLOWCRAFT</span><span className="brand-sub">SOPConnect · by DigiGovern</span>
         </Link>
@@ -35,7 +35,7 @@ export function TopBar() {
               <Avatar person={me} /><span className="uname">{displayName(me)}</span>
             </button>
             {open && (
-              <div className="menu" role="menu">
+              <div className="menu glass" role="menu">
                 <div className="who"><b>{displayName(me)}</b><span className="note">{me.email}</span>{me.unit && <div className="note">{me.unit}</div>}</div>
                 <Link to="/profil" role="menuitem" onClick={() => setOpen(false)}><Icon name="user" />Profil & kata sandi</Link>
                 {me.role === 'admin' && <Link to="/admin" role="menuitem" onClick={() => setOpen(false)}><Icon name="shield" />Admin</Link>}

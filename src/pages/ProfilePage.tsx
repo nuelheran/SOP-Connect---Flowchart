@@ -27,7 +27,7 @@ export default function ProfilePage() {
   return (
     <main className="page wrap">
       <div className="page-head"><div><div className="eyebrow">Akun</div><h1>Profil saya</h1><p>Nama dan unit Anda tampil saat rekan berbagi akses flowchart.</p></div></div>
-      <form className="panel-box" onSubmit={saveProfile}>
+      <form className="panel-box glass" onSubmit={saveProfile}>
         <h3>Data diri</h3>
         <div className="form-grid">
           <label className="fld full"><span>Email</span><input className="input" value={me?.email ?? ''} readOnly /></label>
@@ -37,7 +37,7 @@ export default function ProfilePage() {
         <div><button className="btn primary" disabled={busy}>Simpan profil</button></div>
       </form>
       {api.mode === 'supabase' && (
-        <form className="panel-box" onSubmit={savePw}>
+        <form className="panel-box glass" onSubmit={savePw}>
           <h3>Ganti kata sandi</h3>
           <label className="fld"><span>Kata sandi baru</span><input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" minLength={8} /></label>
           <div><button className="btn" disabled={busy || !pw}>Perbarui kata sandi</button></div>

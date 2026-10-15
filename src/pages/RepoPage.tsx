@@ -67,34 +67,56 @@ export default function RepoPage() {
   }
 
   const newBlank = () => create({ title: '', code: '', unit: me?.unit ?? '', description: '', status: 'draft', steps: blankSteps() });
+  const tryExample = () => create(exampleContent(), 'Dibuat dari contoh');
+  const [showQuick, setShowQuick] = useState(() => { try { return localStorage.getItem('fc-quick') !== '0'; } catch { return true; } });
+  const hideQuick = () => { setShowQuick(false); try { localStorage.setItem('fc-quick', '0'); } catch { /* abaikan */ } };
+  const firstName = displayName(me).split(' ')[0];
 
   return (
     <main className="page wrap">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Database flowchart</div>
+          <div className="eyebrow">{greeting()}, {firstName}</div>
           <h1>Repositori Flowchart SOP</h1>
-          <p>Satu sumber kebenaran untuk alur proses. Process owner menyusun, menyimpan, dan membagikan flowchart SOP-nya sendiri.</p>
+          <p>Satu sumber kebenaran untuk alur proses. Susun, simpan, dan bagikan flowchart SOP Anda di sini.</p>
         </div>
         <div className="actions">
           <button className="btn" onClick={() => fileRef.current?.click()} disabled={creating}><Icon name="upload" />Impor JSON</button>
-          <button className="btn primary" onClick={newBlank} disabled={creating}><Icon name="plus" />Flowchart baru</button>
+          <button className="btn primary lg" onClick={newBlank} disabled={creating}><Icon name="plus" />Flowchart baru</button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ''; }} />
         </div>
       </div>
+
+      {showQuick && (
+        <section className="quick glass" aria-label="Panduan singkat">
+          <div className="quick-ill"><Icon name="flow" /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+            <h3>Buat flowchart SOP dalam 3 langkah</h3>
+            <div className="quick-steps">
+              <div><b>1</b><span>Tulis aktivitas<small>Satu langkah per aktivitas, lengkap dengan pelaksananya.</small></span></div>
+              <div><b>2</b><span>Flowchart tersusun otomatis<small>Swimlane per pelaksana, langsung terlihat di sebelah kanan.</small></span></div>
+              <div><b>3</b><span>Unduh & bagikan<small>PNG, SVG, atau PDF. Atur siapa yang boleh melihat dan mengubah.</small></span></div>
+            </div>
+          </div>
+          <div className="actions" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+            <button className="btn" onClick={tryExample} disabled={creating}>Coba dengan contoh</button>
+            <button className="btn ghost sm" onClick={hideQuick}>Sembunyikan panduan</button>
+          </div>
+        </section>
+      )}
 
       {api.mode === 'demo' && <div className="banner warn"><b>Mode demo.</b> Aplikasi belum terhubung ke Supabase, jadi data hanya tersimpan di browser ini. Lihat README untuk menghubungkan database.</div>}
       {error && <div className="banner err">{error} <button className="btn sm" onClick={load}>Coba lagi</button></div>}
 
       <div className="stats">
-        <div className="stat"><b>{list?.length ?? '–'}</b><span>Total flowchart</span></div>
-        <div className="stat"><b>{list ? count('final') : '–'}</b><span>Final</span></div>
-        <div className="stat"><b>{list ? count('review') : '–'}</b><span>Dalam review</span></div>
-        <div className="stat"><b>{list ? count('draft') : '–'}</b><span>Draft</span></div>
+        <div className="stat glass"><b>{list?.length ?? '–'}</b><span><i style={{ background: 'var(--accent)' }} />Total flowchart</span></div>
+        <div className="stat glass"><b>{list ? count('final') : '–'}</b><span><i style={{ background: 'var(--green)' }} />Final</span></div>
+        <div className="stat glass"><b>{list ? count('review') : '–'}</b><span><i style={{ background: 'var(--amber)' }} />Dalam review</span></div>
+        <div className="stat glass"><b>{list ? count('draft') : '–'}</b><span><i style={{ background: 'var(--faint)' }} />Draft</span></div>
       </div>
 
       <div className="controls">
-        <label className="search"><Icon name="search" /><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari judul, kode SOP, unit, pelaksana, atau pemilik" aria-label="Cari flowchart" /></label>
+        <label className="search glass"><Icon name="search" /><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cari judul, kode SOP, unit, pelaksana, atau pemilik" aria-label="Cari flowchart" /></label>
         <div className="seg" role="group" aria-label="Kepemilikan">
           {([['all', 'Semua'], ['mine', 'Milik saya'], ['shared', 'Dibagikan ke saya']] as [Scope, string][]).map(([k, l]) => (
             <button key={k} aria-pressed={scope === k} onClick={() => setScope(k)}>{l}</button>
@@ -108,16 +130,16 @@ export default function RepoPage() {
       {list === null ? (
         <div className="grid"><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></div>
       ) : list.length === 0 && !error ? (
-        <div className="empty">
+        <div className="empty glass">
           <h2>Belum ada flowchart di database</h2>
           <p>Mulai dengan menuliskan aktivitas proses Anda. FLOWCRAFT menyusun flowchart swimlane-nya secara otomatis.</p>
           <div className="actions" style={{ justifyContent: 'center' }}>
             <button className="btn primary" onClick={newBlank} disabled={creating}><Icon name="plus" />Buat flowchart</button>
-            <button className="btn" onClick={() => create(exampleContent(), 'Dibuat dari contoh')} disabled={creating}>Coba dengan contoh</button>
+            <button className="btn" onClick={tryExample} disabled={creating}>Coba dengan contoh</button>
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="empty"><h2>Tidak ada yang cocok</h2><p>Ubah kata kunci pencarian atau filter.</p></div>
+        <div className="empty glass"><h2>Tidak ada yang cocok</h2><p>Ubah kata kunci pencarian atau filter.</p></div>
       ) : (
         <div className="grid">{filtered.map((f) => <FlowCard key={f.id} f={f} />)}</div>
       )}
@@ -127,10 +149,15 @@ export default function RepoPage() {
 
 function FlowCard({ f }: { f: Flowchart }) {
   const { me } = useAuth();
-  const svg = useMemo(() => renderFlow(f, { compact: true }).svg.replace(/ width="\d+(\.\d+)?" height="\d+(\.\d+)?"/, ''), [f]);
+  // pratinjau horizontal; flowchart panjang dipotong dari awal alur agar tetap terbaca
+  const svg = useMemo(() => {
+    const r = renderFlow(f, { compact: true });
+    const fit = r.width / r.height > 2.6 ? 'xMinYMid slice' : 'xMidYMid meet';
+    return r.svg.replace(/ width="\d+(\.\d+)?" height="\d+(\.\d+)?"/, ` preserveAspectRatio="${fit}"`);
+  }, [f]);
   const r = roleOf(f, me);
   return (
-    <Link className="card" to={`/f/${f.id}`} aria-label={`Buka ${f.title || 'flowchart tanpa judul'}`}>
+    <Link className="card glass" to={`/f/${f.id}`} aria-label={`Buka ${f.title || 'flowchart tanpa judul'}`}>
       <div className="thumb" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="card-body">
         <div className="card-top">
@@ -152,4 +179,9 @@ function FlowCard({ f }: { f: Flowchart }) {
       </div>
     </Link>
   );
+}
+
+function greeting(): string {
+  const h = new Date().getHours();
+  return h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 19 ? 'Selamat sore' : 'Selamat malam';
 }

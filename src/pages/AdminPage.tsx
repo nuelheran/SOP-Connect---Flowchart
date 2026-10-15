@@ -35,7 +35,7 @@ export default function AdminPage() {
       <div className="page-head"><div><div className="eyebrow">Admin aplikasi</div><h1>Pengguna & pengaturan</h1>
         <p>Admin dapat melihat dan mengelola semua flowchart, termasuk yang dibatasi, untuk keperluan tata kelola.</p></div></div>
 
-      <section className="panel-box">
+      <section className="panel-box glass">
         <h3>Batasi pendaftaran ke domain email</h3>
         <p className="note" style={{ margin: 0 }}>Isi domain kantor (mis. perusahaan.co.id) agar hanya email kantor yang dapat mendaftar. Kosongkan untuk mengizinkan semua email selama masa uji coba.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -46,7 +46,7 @@ export default function AdminPage() {
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h3 style={{ fontSize: 16 }}>Pengguna terdaftar {users && <span className="muted mono" style={{ fontSize: 13 }}>({users.length})</span>}</h3>
-        <div className="table-wrap">
+        <div className="table-wrap glass">
           <table className="tbl">
             <thead><tr><th>Nama</th><th>Email</th><th>Unit</th><th>Bergabung</th><th>Peran</th></tr></thead>
             <tbody>

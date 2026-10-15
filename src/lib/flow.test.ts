@@ -47,7 +47,7 @@ describe('renderFlow', () => {
   it('menghasilkan SVG dengan satu kolom per pelaksana dan teks ter-escape', () => {
     const c = exampleContent();
     c.steps[1].text = 'Isi <form> & kirim';
-    const r = renderFlow(c, { table: true });
+    const r = renderFlow(c, { table: true, orientation: 'vertical' });
     expect(r.svg.startsWith('<svg')).toBe(true);
     expect(r.svg).toContain('&lt;form&gt; &amp; kirim');
     expect(r.svg).not.toContain('<form>');
@@ -57,6 +57,16 @@ describe('renderFlow', () => {
   });
   it('tetap aman untuk flowchart kosong', () => {
     expect(renderFlow({ title: '', steps: [] }).svg).toContain('</svg>');
+    expect(renderFlow({ title: '', steps: [] }, { orientation: 'vertical' }).svg).toContain('</svg>');
+  });
+  it('horizontal: label pelaksana diputar vertikal, kegiatan di header atas', () => {
+    const c = exampleContent();
+    const r = renderFlow(c, { orientation: 'horizontal', table: true });
+    expect((r.svg.match(/transform="rotate\(-90/g) || []).length).toBeGreaterThanOrEqual(laneList(c.steps).length);
+    expect(r.svg).toContain('>Kegiatan<');
+    expect(r.svg).toContain('>Output<');
+    expect(r.width).toBeGreaterThan(r.height); // alur kiri→kanan
+    expect((r.svg.match(/class="fc-node"/g) || []).length).toBe(c.steps.length);
   });
 });
 

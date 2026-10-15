@@ -23,6 +23,14 @@ const PATHS: Record<string, ReactNode> = {
   shield: <path d="M8 2 3 4v4c0 3 2.2 5 5 6 2.8-1 5-3 5-6V4z" />,
   restore: <path d="M3 8a5 5 0 1 0 1.5-3.5M3 2.5V5h2.5" />,
   eye: <><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" /><circle cx="8" cy="8" r="2" /></>,
+  chev: <path d="M4.5 6.5 8 10l3.5-3.5" />,
+  image: <><rect x="2.5" y="3" width="11" height="10" rx="1.5" /><circle cx="6" cy="6.5" r="1.2" /><path d="m3 12 3.5-3.5 2.5 2.5 1.5-1.5L13 12" /></>,
+  file: <><path d="M4 2.5h5l3 3v8H4z" /><path d="M9 2.5v3h3" /></>,
+  code: <path d="M6 5 3 8l3 3M10 5l3 3-3 3" />,
+  rows: <><rect x="2.5" y="3" width="11" height="10" rx="1.5" /><path d="M2.5 6.5h11M2.5 10h11M6 3v10" /></>,
+  cols: <><rect x="2.5" y="3" width="11" height="10" rx="1.5" /><path d="M6 3v10M9.5 3v10M2.5 6h11" /></>,
+  bulb: <><path d="M6 12.5h4M6.5 14h3M8 2a4 4 0 0 0-2.4 7.2c.5.4.9 1 .9 1.6V11h3v-.2c0-.6.4-1.2.9-1.6A4 4 0 0 0 8 2z" /></>,
+  flow: <><rect x="2" y="2.5" width="5" height="3.5" rx="1" /><rect x="9" y="10" width="5" height="3.5" rx="1" /><path d="M4.5 6v5.5H9" /></>,
 };
 
 export function Icon({ name }: { name: keyof typeof PATHS | string }) {
@@ -36,11 +44,16 @@ export function Icon({ name }: { name: keyof typeof PATHS | string }) {
 export function BrandMark() {
   return (
     <svg className="brand-mark" viewBox="0 0 30 30" aria-hidden="true">
-      <rect x="1" y="1" width="28" height="28" rx="7" fill="var(--ink)" />
-      <rect x="6" y="6" width="9" height="6" rx="1.5" fill="var(--bg)" />
-      <polygon points="20,13 24.5,17 20,21 15.5,17" fill="#F2B65C" />
-      <rect x="6" y="19" width="9" height="6" rx="3" fill="var(--bg)" />
-      <path d="M10.5 12v7M15 9h5v4" stroke="var(--bg)" strokeWidth="1.4" fill="none" />
+      <defs>
+        <linearGradient id="fc-brand-g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#2F5BEA" /><stop offset="1" stopColor="#0EA5A4" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="28" height="28" rx="8" fill="url(#fc-brand-g)" />
+      <rect x="6" y="6" width="9" height="6" rx="1.5" fill="#fff" />
+      <polygon points="20,13 24.5,17 20,21 15.5,17" fill="#FCD34D" />
+      <rect x="6" y="19" width="9" height="6" rx="3" fill="#fff" />
+      <path d="M10.5 12v7M15 9h5v4" stroke="#fff" strokeWidth="1.4" fill="none" />
     </svg>
   );
 }
@@ -72,6 +85,25 @@ export function StatusPill({ status }: { status: string }) {
   return <span className={`pill ${status}`}>{label}</span>;
 }
 
+/** Tombol dengan menu tarik-turun (tutup saat klik di luar atau Escape). */
+export function Dropdown({ label, children, align = 'right' }: { label: ReactNode; children: (close: () => void) => ReactNode; align?: 'left' | 'right' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  return (
+    <div className="dropdown" ref={ref}>
+      <button className="btn sm primary" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{label}<Icon name="chev" /></button>
+      {open && <div className="menu glass" role="menu" style={align === 'left' ? { left: 0, right: 'auto' } : undefined}>{children(() => setOpen(false))}</div>}
+    </div>
+  );
+}
+
 /* ---------- dialog ---------- */
 export function Modal({ title, onClose, children, wide, busy }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; busy?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -84,7 +116,7 @@ export function Modal({ title, onClose, children, wide, busy }: { title: string;
   }, [onClose, busy]);
   return (
     <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
-      <div className={'dialog' + (wide ? ' wide' : '')} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
+      <div className={'dialog glass' + (wide ? ' wide' : '')} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
         <h2>{title}</h2>
         {children}
       </div>
@@ -126,7 +158,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastCtx.Provider value={show}>
       {children}
-      {t && <div key={t.key} className={'toast' + (t.kind === 'err' ? ' err' : '')} role="status">{t.msg}</div>}
+      {t && <div key={t.key} className={'toast glass' + (t.kind === 'err' ? ' err' : '')} role="status">{t.msg}</div>}
     </ToastCtx.Provider>
   );
 }

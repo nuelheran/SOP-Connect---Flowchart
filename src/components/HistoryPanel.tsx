@@ -4,6 +4,7 @@ import { renderFlow } from '../lib/flow';
 import { displayName, fmtDateTime } from '../lib/format';
 import type { ActivityEntry, Flowchart, VersionEntry } from '../lib/types';
 import { ConfirmDialog, Icon, Modal, errMsg, useToast } from './ui';
+import { preferredView } from './FlowPreview';
 
 interface Props { flow: Flowchart; editable: boolean; refreshKey: number; onRestored: () => Promise<void>; }
 
@@ -58,11 +59,11 @@ export default function HistoryPanel({ flow, editable, refreshKey, onRestored }:
 }
 
 function VersionView({ flow, v, onClose }: { flow: Flowchart; v: VersionEntry; onClose: () => void }) {
-  const svg = useMemo(() => renderFlow({ ...flow, title: v.title, steps: v.steps, version: v.version, updated_at: v.created_at }, { table: true }).svg
+  const svg = useMemo(() => renderFlow({ ...flow, title: v.title, steps: v.steps, version: v.version, updated_at: v.created_at }, preferredView()).svg
     .replace(/ width="\d+(\.\d+)?" height="\d+(\.\d+)?"/, ' style="width:100%;height:auto"'), [flow, v]);
   return (
     <Modal title={`Versi ${v.version}${v.note ? ' · ' + v.note : ''}`} onClose={onClose} wide>
-      <div style={{ overflow: 'auto', border: '1px solid var(--line)', borderRadius: 8, background: '#fff' }} dangerouslySetInnerHTML={{ __html: svg }} />
+      <div style={{ overflow: 'auto', border: '1px solid var(--line)', borderRadius: 12, background: '#fff', maxHeight: '70vh' }} dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="row"><button className="btn" onClick={onClose}>Tutup</button></div>
     </Modal>
   );

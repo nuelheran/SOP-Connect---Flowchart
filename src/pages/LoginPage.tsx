@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [unit, setUnit] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
-  const preview = useMemo(() => renderFlow({ ...exampleContent(), version: 1, status: 'final' }, { table: false }).svg, []);
+  const preview = useMemo(() => renderFlow({ ...exampleContent(), version: 1, status: 'final' }, { orientation: 'horizontal', table: true }).svg, []);
   const demo = api.mode === 'demo';
 
   async function submit(e: FormEvent) {
@@ -40,37 +40,39 @@ export default function LoginPage() {
 
   return (
     <div className="auth">
-      <section className="auth-side" aria-label="Tentang FLOWCRAFT">
-        <div className="brand"><BrandMark /><span className="brand-name">FLOWCRAFT</span><span className="brand-sub" style={{ borderColor: 'rgba(255,255,255,.25)', color: 'inherit', opacity: .7 }}>SOPConnect · by DigiGovern</span></div>
-        <h1>Tulis aktivitasnya, flowchart SOP tersusun sendiri.</h1>
+      <section className="auth-hero" aria-label="Tentang FLOWCRAFT">
+        <div className="brand"><BrandMark /><span className="brand-name">FLOWCRAFT</span><span className="brand-sub">SOPConnect · by DigiGovern</span></div>
+        <h1>Tulis aktivitasnya, <em>flowchart SOP</em> tersusun sendiri.</h1>
         <p>Process owner menyusun SOP-nya secara mandiri. Flowchart tersimpan di satu repositori yang dapat dipercaya, lengkap dengan pemilik, hak akses, dan riwayat versinya.</p>
-        <div className="auth-steps">
-          <div><b>01</b>Input aktivitas yang dijalankan</div>
-          <div><b>02</b>Flowchart dibuat otomatis</div>
-          <div><b>03</b>Unduh flowchart</div>
-          <div><b>04</b>Susun dokumen SOP</div>
+        <div className="flowsteps" aria-label="Alur kerja">
+          <span className="glass"><b>1</b>Input aktivitas</span><i>→</i>
+          <span className="glass"><b>2</b>Flowchart otomatis</span><i>→</i>
+          <span className="glass"><b>3</b>Unduh</span><i>→</i>
+          <span className="glass"><b>4</b>Susun SOP</span>
         </div>
-        <div className="auth-preview" dangerouslySetInnerHTML={{ __html: preview }} />
+        <div className="auth-preview glass" aria-hidden="true"><div dangerouslySetInnerHTML={{ __html: preview }} /></div>
       </section>
-      <main className="auth-main">
-        <form className="auth-card" onSubmit={submit}>
-          <h2>{mode === 'login' ? 'Masuk' : mode === 'signup' ? 'Buat akun' : 'Lupa kata sandi'}</h2>
+      <main>
+        <form className="auth-card glass" onSubmit={submit}>
+          <h2>{mode === 'login' ? 'Selamat datang kembali' : mode === 'signup' ? 'Buat akun baru' : 'Lupa kata sandi'}</h2>
+          <p className="sub">{mode === 'login' ? 'Masuk untuk membuka repositori flowchart tim Anda.' : mode === 'signup' ? 'Gratis untuk seluruh karyawan. Gunakan email kantor.' : 'Kami kirim tautan untuk membuat kata sandi baru.'}</p>
           {demo && <div className="banner warn">Mode demo: belum terhubung ke database. Masukkan email apa pun untuk mencoba; data hanya tersimpan di browser ini.</div>}
           {mode !== 'reset' && (
-            <div className="seg" role="group" aria-label="Pilih">
-              <button type="button" aria-pressed={mode === 'login'} onClick={() => { setMode('login'); setMsg(null); }}>Masuk</button>
-              <button type="button" aria-pressed={mode === 'signup'} onClick={() => { setMode('signup'); setMsg(null); }}>Daftar</button>
+            <div className="seg" role="group" aria-label="Pilih" style={{ width: '100%' }}>
+              <button type="button" style={{ flex: 1, justifyContent: 'center' }} aria-pressed={mode === 'login'} onClick={() => { setMode('login'); setMsg(null); }}>Masuk</button>
+              <button type="button" style={{ flex: 1, justifyContent: 'center' }} aria-pressed={mode === 'signup'} onClick={() => { setMode('signup'); setMsg(null); }}>Daftar</button>
             </div>
           )}
           {mode === 'signup' && (
             <>
-              <label className="fld"><span>Nama lengkap</span><input id="fullName" className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" required /></label>
+              <label className="fld"><span>Nama lengkap</span><input id="fullName" className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" placeholder="mis. Manuel Nicholas" required /></label>
               <label className="fld"><span>Unit / departemen</span><input id="unit" className="input" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="mis. Human Resources" /></label>
             </>
           )}
-          <label className="fld"><span>Email kantor</span><input id="email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required /></label>
+          <label className="fld"><span>Email kantor</span><input id="email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="nama@perusahaan.co.id" required /></label>
           {mode !== 'reset' && (
             <label className="fld"><span>Kata sandi</span><input id="password" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder={mode === 'signup' ? 'Minimal 8 karakter' : ''}
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required={!demo} minLength={demo ? undefined : mode === 'signup' ? 8 : 6} /></label>
           )}
           {msg && <div className={'banner ' + (msg.kind === 'err' ? 'err' : 'ok')} role="alert">{msg.text}</div>}
@@ -102,7 +104,7 @@ export function RecoveryPage() {
   }
   return (
     <div className="center">
-      <form className="auth-card" onSubmit={submit} style={{ textAlign: 'left' }}>
+      <form className="auth-card glass" onSubmit={submit} style={{ textAlign: 'left' }}>
         <h2>Buat kata sandi baru</h2>
         <label className="fld"><span>Kata sandi baru</span><input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" /></label>
         <label className="fld"><span>Ulangi kata sandi</span><input className="input" type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} autoComplete="new-password" /></label>

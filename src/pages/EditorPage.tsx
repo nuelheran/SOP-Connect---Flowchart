@@ -133,23 +133,23 @@ export default function EditorPage() {
 
   return (
     <div className="editor">
-      <div className="ed-bar">
-        <div className="ed-bar-in wrap">
+      <div className="ed-bar glass">
+        <div className="ed-bar-in">
           <Link className="btn ghost" to="/" onClick={() => save()}><Icon name="back" />Repositori</Link>
           <input className="title-input" value={flow.title} readOnly={!editable} placeholder="Judul flowchart" aria-label="Judul flowchart"
             onChange={(e) => patch({ title: e.target.value })} autoFocus={editable && !flow.title} />
-          <select className="input" style={{ width: 'auto' }} value={flow.status} disabled={!editable} aria-label="Status"
+          <select className="input status-select" value={flow.status} disabled={!editable} aria-label="Status"
             onChange={(e) => patch({ status: e.target.value as FlowStatus })}>
             <option value="draft">Draft</option><option value="review">Review</option><option value="final">Final</option>
           </select>
           <span className="pill role">{role ? ROLE_LABEL[role] : 'Pembaca'}</span>
           <span className="mono muted" style={{ fontSize: 12 }}>{flow.version ? 'v' + flow.version : 'belum berversi'}</span>
-          {editable && <span className={'save-state' + (saveState === 'error' || saveState === 'conflict' ? ' err' : '')} role="status">{saveLabel[saveState]}</span>}
+          {editable && <span className={'save-pill ' + (saveState === 'error' || saveState === 'conflict' ? 'err' : saveState)} role="status"><i />{saveLabel[saveState]}</span>}
           {saveState === 'error' && <button className="btn sm" onClick={() => save()}>Coba simpan lagi</button>}
-          {editable && <button className="btn" onClick={() => setVersionDlg(true)}><Icon name="clock" />Simpan versi</button>}
+          {editable && <button className="btn" onClick={() => setVersionDlg(true)} title="Simpan salinan tetap, mis. saat diajukan untuk review"><Icon name="clock" />Simpan versi</button>}
         </div>
         {saveState === 'conflict' && (
-          <div className="wrap" style={{ paddingBottom: 10 }}>
+          <div className="sub">
             <div className="banner err">
               <span style={{ flex: 1, minWidth: 220 }}>Flowchart ini baru saja diubah oleh orang lain. Pilih versi mana yang dipakai.</span>
               <button className="btn sm" onClick={() => { dirty.current = false; load(); }}>Muat versi terbaru (buang perubahan saya)</button>
@@ -158,17 +158,19 @@ export default function EditorPage() {
           </div>
         )}
         {!editable && (
-          <div className="wrap" style={{ paddingBottom: 10 }}>
+          <div className="sub">
             <div className="banner">Anda membuka flowchart ini sebagai Pembaca. Hubungi pemiliknya ({displayName(flow.owner)}) untuk akses Editor.</div>
           </div>
         )}
       </div>
       <div className="ed-body">
-        <section className="panel" aria-label="Isi flowchart">
-          <div className="tabs" role="tablist">
-            {([['steps', 'Langkah'], ['info', 'Info & Akses'], ['history', 'Versi & Riwayat']] as [Tab, string][]).map(([k, l]) => (
-              <button key={k} className="tab" role="tab" aria-selected={tab === k} onClick={() => switchTab(k)}>{l}</button>
-            ))}
+        <section className="panel glass" aria-label="Isi flowchart">
+          <div className="panel-tabs">
+            <div className="seg" role="tablist">
+              {([['steps', 'Langkah', 'list'], ['info', 'Info & Akses', 'user'], ['history', 'Versi & Riwayat', 'clock']] as [Tab, string, string][]).map(([k, l, ic]) => (
+                <button key={k} role="tab" aria-selected={tab === k} onClick={() => switchTab(k)}><Icon name={ic} />{l}{k === 'steps' && <span className="mono muted" style={{ fontSize: 11 }}>{flow.steps.length}</span>}</button>
+              ))}
+            </div>
           </div>
           <div className="panel-scroll">
             {tab === 'steps' && <StepList steps={flow.steps} editable={editable} highlight={hl} onChange={(steps) => patch({ steps })} onCompose={() => setCompose(true)} />}

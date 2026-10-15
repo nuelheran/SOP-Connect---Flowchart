@@ -4,15 +4,17 @@ Aplikasi web untuk process owner: **input aktivitas → flowchart SOP tersusun o
 
 | Fitur | Keterangan |
 |---|---|
-| Auto generate flowchart | Isi langkah (aktivitas, pelaksana, simbol, tujuan, output, waktu) → flowchart swimlane per pelaksana, format tabel SOP (No, Kegiatan, Pelaksana, Output, Waktu). Cabang Ya/Tidak dan alur kembali tergambar otomatis. |
+| Auto generate flowchart | Isi langkah (aktivitas, pelaksana, simbol, tujuan, output, waktu) → flowchart swimlane otomatis. **Horizontal** (bawaan): kegiatan berjajar di header atas, pelaksana sebagai baris dengan label vertikal di kiri, Output & Waktu di baris bawah. **Vertikal**: format tabel SOP klasik. Cabang Ya/Tidak dan alur kembali tergambar otomatis. |
 | Pemeriksaan alur | Menandai alur tanpa Selesai, keputusan tanpa cabang "Tidak", langkah yang tidak terhubung, dll. |
 | Susun otomatis | *Daftar cepat* (`Pelaksana: aktivitas` per baris) atau *dari narasi* dengan AI (opsional). |
-| Unduh | PNG, SVG, Cetak / PDF, dan JSON (cadangan & impor). |
+| Unduh | PNG, SVG, Cetak / PDF, dan JSON (cadangan & impor), sesuai orientasi yang dipilih. |
 | Database flowchart | Repositori bersama: pencarian, filter status Draft/Review/Final, kepemilikan. |
 | Kepemilikan & akses | Pemilik, Editor, Pembaca; visibilitas "semua pengguna" atau "hanya yang diberi akses"; alih kepemilikan. **Dijaga di server** (Row Level Security). |
 | Versi & riwayat | Simpan versi (snapshot), lihat & pulihkan versi lama, log aktivitas otomatis. |
 | Edit bersamaan | Deteksi bentrok bila dua orang mengubah flowchart yang sama. |
 | Admin | Kelola peran pengguna, batasi pendaftaran ke domain email kantor. |
+
+**Tampilan:** antarmuka kaca (glassmorphism) dengan mode terang/gelap otomatis, panduan singkat untuk pengguna baru, dan pemilih simbol berbentuk ikon.
 
 **Teknologi (semua bisa gratis):** React + TypeScript + Vite (frontend) · Supabase (PostgreSQL, Auth, Row Level Security) · hosting statis Vercel / Netlify / Cloudflare Pages.
 
