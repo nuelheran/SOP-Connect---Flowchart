@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  database-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Jalankan migrasi + uji hak akses
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/_stub_supabase.sql -f supabase/migrations/20261015000000_init.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_test.sql 2>&1 | tee out.txt
+          ! grep -q "GAGAL" out.txt
